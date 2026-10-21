@@ -7,3 +7,6 @@ ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_amount_chk" CHECK ("amount
 ALTER TABLE "Transaction" ADD CONSTRAINT "Transaction_desc_chk" CHECK (length("description") <= 200);
 ALTER TABLE "Budget" ADD CONSTRAINT "Budget_amount_chk" CHECK ("amount" >= 0 AND "amount" <= 999999999999999);
 ALTER TABLE "Budget" ADD CONSTRAINT "Budget_period_chk" CHECK ("effectiveFrom" ~ '^[0-9]{4}-(0[1-9]|1[0-2])$');
+-- (migrasi admin_username)
+ALTER TABLE "User" ADD CONSTRAINT "User_role_chk" CHECK ("role" IN ('USER', 'ADMIN'));
+ALTER TABLE "User" ADD CONSTRAINT "User_username_chk" CHECK ("username" IS NULL OR "username" ~ '^[a-z0-9_.]{3,30}$');

@@ -1,5 +1,16 @@
 # Catatan per fase
 
+## 21 Okt 2026 — Akun hanya dibuat admin
+- Login memakai **username** (plugin username Better Auth); username disimpan huruf kecil, 3–30 karakter `a-z 0-9 . _`.
+- **Pendaftaran mandiri ditutup**; halaman daftar, verifikasi email, lupa/reset password dihapus. Endpoint auth yang tidak dipakai dimatikan (`disabledPaths`).
+- Peran `USER` / `ADMIN` (kolom `role`, CHECK di DB). Admin tidak punya buku kas; user tidak bisa membuka `/admin`.
+- Halaman **Manajemen User** (`/admin`): daftar user (username, nama, dibuat, login terakhir, jumlah baris transaksi — tanpa isi), tambah user, atur ulang password (mencabut semua sesi user), hapus permanen (konfirmasi ketik username, cascade semua data).
+- **Ganti password sendiri** untuk user (`/pengaturan/akun`) dan admin (`/admin/akun`).
+- `npm run admin:create` membuat admin `admin` / `password` (sesuai permintaan) — idempoten, bisa set ulang password.
+- Migrasi `admin_username`. Test: 126 (termasuk login username, pendaftaran tertutup, ganti password, fitur admin, penolakan non-admin).
+
+**Catatan keamanan**: password admin bawaan `password` sangat lemah dan aplikasi publik; rate limit 5 percobaan/menit hanya memperlambat. Ganti password admin segera setelah login pertama.
+
 ## 21 Okt 2026 — Versi 2: buku kas ala spreadsheet (perombakan total)
 Permintaan: fokus ke kas masuk/keluar berbentuk spreadsheet, bukan aplikasi dompet.
 

@@ -5,25 +5,43 @@ import { cache } from "react";
 import { forUser, type ScopedDb } from "@/server/db/scoped";
 import { auth } from "./auth";
 
+export type Role = "USER" | "ADMIN";
+
 export interface SessionUser {
   id: string;
   name: string;
-  email: string;
-  emailVerified: boolean;
+  username: string;
+  role: Role;
   image: string | null;
 }
 
-/** Satu-satunya sumber userId: sesi di server (aturan bisnis #8). Di-dedupe per request. */
+/** Satu-satunya sumber userId & peran: sesi di server (aturan bisnis #8). Di-dedupe per request. */
 export const getSessionUser = cache(async (): Promise<SessionUser | null> => {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return null;
-  const u = session.user;
-  return { id: u.id, name: u.name, email: u.email, emailVerified: u.emailVerified, image: u.image ?? null };
+  const u = session.user as typeof session.user & { username?: string | null; role?: string | null };
+  return {
+    id: u.id,
+    name: u.name,
+    username: u.username ?? "",
+    role: u.role === "ADMIN" ? "ADMIN" : "USER",
+    image: u.image ?? null,
+  };
 });
 
+/** Halaman buku kas: hanya user biasa. Admin diarahkan ke halaman manajemen akun. */
 export async function requireUser(): Promise<SessionUser> {
   const user = await getSessionUser();
   if (!user) redirect("/masuk");
+  if (user.role === "ADMIN") redirect("/admin");
+  return user;
+}
+
+/** Halaman admin: hanya ADMIN. User biasa diarahkan ke buku kas. */
+export async function requireAdmin(): Promise<SessionUser> {
+  const user = await getSessionUser();
+  if (!user) redirect("/masuk");
+  if (user.role !== "ADMIN") redirect("/buku");
   return user;
 }
 

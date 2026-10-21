@@ -23,7 +23,17 @@ export function initials(name: string) {
     .join("");
 }
 
-export function UserMenu({ name, email, image }: { name: string; email: string; image: string | null }) {
+export function UserMenu({
+  name,
+  username,
+  image,
+  settingsHref = "/pengaturan",
+}: {
+  name: string;
+  username: string;
+  image: string | null;
+  settingsHref?: string;
+}) {
   const router = useRouter();
   return (
     <DropdownMenu>
@@ -37,11 +47,11 @@ export function UserMenu({ name, email, image }: { name: string; email: string; 
         <DropdownMenuGroup>
           <DropdownMenuLabel>
             <div className="truncate font-medium text-foreground">{name}</div>
-            <div className="truncate text-xs font-normal text-muted-foreground">{email}</div>
+            <div className="truncate text-xs font-normal text-muted-foreground">@{username}</div>
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push("/pengaturan")}>
+        <DropdownMenuItem onClick={() => router.push(settingsHref)}>
           <Settings className="size-4" /> Pengaturan
         </DropdownMenuItem>
         <DropdownMenuItem

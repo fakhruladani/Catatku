@@ -15,7 +15,16 @@ Versi 1 (dompet, transfer, investasi, target, utang, net worth) **dihapus** atas
 | Tab tambahan | Rekap Bulanan, Rekap Tahunan, Anggaran, Kategori |
 | Fitur spreadsheet | Ekspor .xlsx, paste banyak baris dari Excel/Sheets, navigasi keyboard |
 
-Yang dipertahankan dari versi 1: multi-user + isolasi data, Better Auth (verifikasi email, reset password, rate limit, argon2id), kategori + subkategori 1 level, tanggal awal bulan keuangan (1–28), tema, onboarding, VPS.
+Yang dipertahankan dari versi 1: multi-user + isolasi data, Better Auth (rate limit, argon2id), kategori + subkategori 1 level, tanggal awal bulan keuangan (1–28), tema, onboarding, VPS.
+
+## 0b. Model akun (sejak 21 Okt 2026)
+
+- Login dengan **username** + password. Tidak ada pendaftaran mandiri, verifikasi email, atau lupa password via email.
+- Peran `USER` (punya buku kas) dan `ADMIN` (hanya Manajemen User, tanpa buku kas). Akun dibuat admin lewat `/admin` atau `npm run admin:create`.
+- Admin: tambah user, atur ulang password (semua sesi user dicabut), hapus permanen (cascade). Admin hanya melihat metadata (username, nama, dibuat, login terakhir, jumlah baris), bukan isi catatan.
+- Semua pengguna bisa mengganti password sendiri (perlu password lama; sesi lain dikeluarkan).
+- Kode lintas-user hanya di `src/server/admin/**`; setiap aksi mengecek ulang peran ke database. `runAction` (buku kas) menolak akun admin.
+- Kolom `User.email` tetap ada karena diwajibkan Better Auth, diisi email internal `<username>@users.catatku.invalid` (tidak dipakai).
 
 ## 1. Stack
 

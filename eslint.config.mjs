@@ -8,7 +8,7 @@ const eslintConfig = defineConfig([
   {
     // Isolasi data: Prisma Client mentah hanya boleh dipakai oleh auth & lapisan db.
     files: ["src/**/*.{ts,tsx}"],
-    ignores: ["src/server/db/**", "src/server/auth/**"],
+    ignores: ["src/server/db/**", "src/server/auth/**", "src/server/admin/**"],
     rules: {
       "no-restricted-imports": [
         "error",

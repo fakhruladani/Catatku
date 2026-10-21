@@ -3,10 +3,11 @@
  * Dipakai untuk mencoba aplikasi dan menguji isolasi data secara manual.
  *
  * Jalankan: npm run db:seed   (idempoten: user demo lama dihapus dulu, beserta seluruh datanya)
- * Login   : budi@demo.catatku / sari@demo.catatku — password: Demo12345!
+ * Login   : username budi / sari — password: Demo12345!
+ * Akun admin TIDAK dibuat di sini — pakai `npm run admin:create`.
  */
 import type { Prisma } from "../src/generated/prisma/client";
-import { auth } from "../src/server/auth/auth";
+import { createAccount } from "../src/server/admin/accounts";
 import { basePrisma } from "../src/server/db/base-client";
 import { forUser, type ScopedDb } from "../src/server/db/scoped";
 import { currentPeriodKey, shiftPeriod, todayInJakarta, toDbDate } from "../src/lib/period";
@@ -35,13 +36,13 @@ const rb = (n: number) => BigInt(Math.round(n / 1000) * 1000);
 
 type Cat = Map<string, string>; // "EXPENSE:Makan di luar" -> id
 
-async function createDemoUser(name: string, email: string, nickname: string, startDay: number, opening: bigint) {
-  const existing = await basePrisma.user.findUnique({ where: { email } });
+async function createDemoUser(name: string, username: string, nickname: string, startDay: number, opening: bigint) {
+  const existing = await basePrisma.user.findUnique({ where: { username } });
   if (existing) await basePrisma.user.delete({ where: { id: existing.id } }); // cascade
-  await auth.api.signUpEmail({ body: { name, email, password: PASSWORD } });
+  const { id } = await createAccount({ username, name, password: PASSWORD });
   const user = await basePrisma.user.update({
-    where: { email },
-    data: { emailVerified: true, nickname, onboardingCompletedAt: new Date() },
+    where: { id },
+    data: { nickname, onboardingCompletedAt: new Date() },
   });
   const db = forUser(user.id);
   await db.userPreference.update({
@@ -78,7 +79,7 @@ async function budgets(db: ScopedDb, userId: string, c: Cat, startDay: number, l
 }
 
 async function seedBudi() {
-  const { userId, db } = await createDemoUser("Budi Santoso", "budi@demo.catatku", "Budi", 25, 3_500_000n);
+  const { userId, db } = await createDemoUser("Budi Santoso", "budi", "Budi", 25, 3_500_000n);
   const c = await categoryMap(db);
   const rnd = mulberry32(42);
   const today = todayInJakarta();
@@ -115,7 +116,7 @@ async function seedBudi() {
 }
 
 async function seedSari() {
-  const { userId, db } = await createDemoUser("Sari Wulandari", "sari@demo.catatku", "Sari", 1, 1_200_000n);
+  const { userId, db } = await createDemoUser("Sari Wulandari", "sari", "Sari", 1, 1_200_000n);
   const c = await categoryMap(db);
   const rnd = mulberry32(7);
   const today = todayInJakarta();
@@ -157,8 +158,8 @@ async function main() {
   const budi = await seedBudi();
   const sari = await seedSari();
   console.info(`Seed selesai:
-  budi@demo.catatku  (${budi} transaksi, tanggal awal bulan 25)
-  sari@demo.catatku  (${sari} transaksi, tanggal awal bulan 1)
+  budi  (${budi} transaksi, tanggal awal bulan 25)
+  sari  (${sari} transaksi, tanggal awal bulan 1)
   Password keduanya: ${PASSWORD}`);
 }
 

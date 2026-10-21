@@ -20,7 +20,7 @@ async function SessionChrome() {
         </Link>
       )}
       <span className="hidden text-sm text-muted-foreground sm:block">Halo, {profile.nickname || profile.name.split(" ")[0]}</span>
-      <UserMenu name={profile.nickname || profile.name} email={profile.email} image={profile.image} />
+      <UserMenu name={profile.nickname || profile.name} username={ctx.user.username} image={profile.image} />
     </>
   );
 }

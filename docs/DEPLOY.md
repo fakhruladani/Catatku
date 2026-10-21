@@ -54,21 +54,18 @@ DATABASE_URL="postgresql://catatku:PASSWORD_DB@localhost:5432/catatku"
 BETTER_AUTH_SECRET="hasil: openssl rand -base64 32"
 BETTER_AUTH_URL="https://catatku.domainmu.com"
 APP_URL="https://catatku.domainmu.com"
-EMAIL_VERIFICATION="true"
-EMAIL_TRANSPORT="resend"
-RESEND_API_KEY="re_xxx"
-EMAIL_FROM="Catatku <no-reply@domainmu.com>"
 UPLOAD_DIR="/home/USER/catatku-data/uploads"
 ```
-
-> Tanpa layanan email, set `EMAIL_VERIFICATION="false"` dan `EMAIL_TRANSPORT="console"` — tetapi siapa pun bisa mendaftar dengan email apa pun, dan tautan reset password hanya muncul di log server.
 
 ```bash
 mkdir -p ~/catatku-data/uploads && chmod 700 ~/catatku-data
 npm ci
 npm run db:deploy
+ADMIN_PASSWORD='ganti-dengan-password-kuat' npm run admin:create
 npm run build
 ```
+
+> Tanpa `ADMIN_PASSWORD`, admin dibuat dengan password `password` — **wajib** diganti segera setelah login (menu *Akun saya*), karena server sudah bisa diakses dari internet.
 
 ## 4. Service systemd
 
@@ -147,6 +144,6 @@ sudo systemctl restart catatku
 - [ ] `BETTER_AUTH_SECRET` acak dan `.env` ber-permission `600`
 - [ ] Port 3000 tidak dibuka di firewall (aplikasi hanya mendengar di `127.0.0.1`)
 - [ ] Login SSH memakai key; `PasswordAuthentication no` dan `PermitRootLogin no` di `/etc/ssh/sshd_config`
-- [ ] Verifikasi email aktif dengan domain pengirim sendiri
-- [ ] Akun demo tidak ada di database produksi
+- [ ] Password admin bukan `password` (ganti lewat *Akun saya* atau `ADMIN_PASSWORD`)
+- [ ] Akun demo tidak ada di database produksi (jangan jalankan `db:seed`)
 - [ ] Backup database terjadwal

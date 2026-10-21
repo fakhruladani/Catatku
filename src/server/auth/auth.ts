@@ -3,17 +3,23 @@ import { hash as argonHash, verify as argonVerify } from "@node-rs/argon2";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
+import { username } from "better-auth/plugins";
 import { basePrisma } from "@/server/db/base-client";
-import { resetPasswordEmail, sendEmail, verificationEmail } from "@/server/email";
-import { provisionNewUser } from "@/server/provision";
+import { USERNAME_MAX, USERNAME_MIN, USERNAME_RE } from "@/lib/username";
 
-export const emailVerificationEnabled = process.env.EMAIL_VERIFICATION !== "false";
-
-// Parameter argon2id (OWASP 2024: m=19 MiB, t=2, p=1)
+// Parameter argon2id (OWASP: m=19 MiB, t=2, p=1). Dipakai juga oleh fitur admin (buat/reset password).
 const ARGON_OPTS = { memoryCost: 19456, timeCost: 2, parallelism: 1 } as const;
+export const hashPassword = (password: string) => argonHash(password, ARGON_OPTS);
+export const verifyPassword = (hash: string, password: string) => argonVerify(hash, password);
 
 const appUrl = process.env.APP_URL ?? process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
 
+/**
+ * Model akun:
+ * - Login dengan USERNAME + password (plugin username).
+ * - Pendaftaran mandiri DIMATIKAN. Akun hanya dibuat oleh admin (src/features/admin).
+ * - Tidak ada alur email (verifikasi / lupa password); password lupa di-reset oleh admin.
+ */
 export const auth = betterAuth({
   appName: "Catatku",
   baseURL: process.env.BETTER_AUTH_URL ?? appUrl,
@@ -23,35 +29,43 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
+    disableSignUp: true,
     minPasswordLength: 8,
     maxPasswordLength: 128,
-    requireEmailVerification: emailVerificationEnabled,
-    autoSignIn: !emailVerificationEnabled,
-    revokeSessionsOnPasswordReset: true,
-    resetPasswordTokenExpiresIn: 60 * 60,
+    requireEmailVerification: false,
     password: {
-      hash: (password) => argonHash(password, ARGON_OPTS),
-      verify: ({ hash, password }) => argonVerify(hash, password),
-    },
-    sendResetPassword: async ({ user, url }) => {
-      await sendEmail(resetPasswordEmail(user.email, user.name, url));
+      hash: hashPassword,
+      verify: ({ hash, password }) => verifyPassword(hash, password),
     },
   },
 
-  emailVerification: {
-    sendOnSignUp: emailVerificationEnabled,
-    sendOnSignIn: emailVerificationEnabled,
-    autoSignInAfterVerification: true,
-    expiresIn: 60 * 60,
-    sendVerificationEmail: async ({ user, url }) => {
-      await sendEmail(verificationEmail(user.email, user.name, url));
+  user: {
+    additionalFields: {
+      role: { type: "string", required: false, defaultValue: "USER", input: false },
     },
   },
+
+  // Endpoint bawaan yang tidak dipakai aplikasi ditutup (mengecilkan permukaan serangan).
+  disabledPaths: [
+    "/sign-up/email",
+    "/sign-in/email",
+    "/request-password-reset",
+    "/reset-password",
+    "/send-verification-email",
+    "/verify-email",
+    "/change-email",
+    "/update-user",
+    "/delete-user",
+    "/sign-in/social",
+    "/link-social",
+    "/unlink-account",
+    "/is-username-available",
+  ],
 
   session: {
     expiresIn: 60 * 60 * 24 * 30, // 30 hari
-    updateAge: 60 * 60 * 24, // perpanjang tiap 1 hari aktivitas
-    // cookieCache sengaja OFF: sesi yang dicabut (logout semua perangkat) langsung tidak berlaku.
+    updateAge: 60 * 60 * 24,
+    // cookieCache OFF: akun yang dihapus / password yang di-reset admin langsung tidak berlaku.
   },
 
   rateLimit: {
@@ -60,10 +74,8 @@ export const auth = betterAuth({
     window: 60,
     max: 100,
     customRules: {
-      "/sign-in/email": { window: 60, max: 5 },
-      "/sign-up/email": { window: 60, max: 3 },
-      "/request-password-reset": { window: 300, max: 3 },
-      "/send-verification-email": { window: 300, max: 3 },
+      "/sign-in/username": { window: 60, max: 5 },
+      "/change-password": { window: 60, max: 5 },
     },
   },
 
@@ -73,16 +85,25 @@ export const auth = betterAuth({
   },
 
   databaseHooks: {
-    user: {
+    session: {
       create: {
-        after: async (user) => {
-          await provisionNewUser(user.id);
+        after: async (session) => {
+          await basePrisma.user.update({ where: { id: session.userId }, data: { lastLoginAt: new Date() } });
         },
       },
     },
   },
 
-  plugins: [nextCookies()],
+  plugins: [
+    username({
+      minUsernameLength: USERNAME_MIN,
+      maxUsernameLength: USERNAME_MAX,
+      usernameValidator: (u) => USERNAME_RE.test(u.toLowerCase()),
+      immutableUsername: true,
+      displayUsername: false,
+    }),
+    nextCookies(),
+  ],
 });
 
 export type AuthSession = typeof auth.$Infer.Session;

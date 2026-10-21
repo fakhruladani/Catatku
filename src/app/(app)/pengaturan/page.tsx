@@ -1,4 +1,4 @@
-import { ChevronRight, SlidersHorizontal, Tags } from "lucide-react";
+import { ChevronRight, KeyRound, SlidersHorizontal, Tags } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/shared/page-header";
@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 export const metadata: Metadata = { title: "Pengaturan" };
 
 const ITEMS = [
+  { href: "/pengaturan/akun", label: "Akun & password", desc: "Ganti password", icon: KeyRound },
   { href: "/pengaturan/preferensi", label: "Preferensi", desc: "Saldo awal, tanggal awal bulan, tema", icon: SlidersHorizontal },
   { href: "/kategori", label: "Kategori", desc: "Kelola kategori pemasukan & pengeluaran", icon: Tags },
 ];

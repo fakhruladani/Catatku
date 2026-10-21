@@ -1,103 +1,77 @@
+/** Login username, pendaftaran mandiri ditutup, ganti password — diuji lewat handler HTTP Better Auth. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { DEFAULT_CATEGORIES } from "@/lib/default-categories";
 import { auth } from "@/server/auth/auth";
-import { outbox } from "@/server/email";
-import { basePrisma, resetDb } from "../support/db";
+import { basePrisma, createTestUser, resetDb, TEST_PASSWORD } from "../support/db";
 
-const EMAIL = "dina@test.local";
-const PASSWORD = "Rahasia-Kuat-123";
+const ORIGIN = "http://localhost:3000";
 
-function lastLink(to: string): string {
-  const msg = [...outbox].reverse().find((m) => m.to === to);
-  if (!msg) throw new Error(`Tidak ada email untuk ${to}`);
-  const m = /(https?:\/\/\S+)/.exec(msg.text);
-  return m![1]!;
+function call(path: string, body: unknown, cookie?: string) {
+  return auth.handler(
+    new Request(`${ORIGIN}/api/auth${path}`, {
+      method: "POST",
+      headers: { "content-type": "application/json", origin: ORIGIN, ...(cookie ? { cookie } : {}) },
+      body: JSON.stringify(body),
+    }),
+  );
 }
+const cookieOf = (res: Response) =>
+  res.headers
+    .getSetCookie()
+    .map((c) => c.split(";")[0])
+    .join("; ");
 
-async function signIn(email: string, password: string) {
-  return auth.api.signInEmail({ body: { email, password }, asResponse: true });
-}
+let user: Awaited<ReturnType<typeof createTestUser>>;
 
 beforeAll(async () => {
   await resetDb();
-  outbox.length = 0;
+  user = await createTestUser("Dina");
 });
-afterAll(async () => {
-  await basePrisma.$disconnect();
-});
+afterAll(() => basePrisma.$disconnect());
 
-describe("registrasi, verifikasi email, login", () => {
-  it("registrasi membuat user + preferensi + SALINAN kategori default, dan mengirim email verifikasi", async () => {
-    const res = await auth.api.signUpEmail({ body: { name: "Dina", email: EMAIL, password: PASSWORD }, asResponse: true });
-    expect(res.status).toBe(200);
-    const user = await basePrisma.user.findUniqueOrThrow({ where: { email: EMAIL } });
-    expect(user.emailVerified).toBe(false);
-
-    const pref = await basePrisma.userPreference.findUnique({ where: { userId: user.id } });
-    expect(pref?.financialMonthStartDay).toBe(1);
-
-    const expectedCount = DEFAULT_CATEGORIES.reduce((n, c) => n + 1 + (c.children?.length ?? 0), 0);
-    expect(await basePrisma.category.count({ where: { userId: user.id } })).toBe(expectedCount);
-
-    expect(outbox.some((m) => m.to === EMAIL && m.subject.includes("Verifikasi"))).toBe(true);
+describe("akun & login", () => {
+  it("pendaftaran mandiri ditutup (endpoint sign-up tidak tersedia)", async () => {
+    const res = await call("/sign-up/email", { name: "X", email: "x@test.local", password: "Password-123", username: "xx" });
+    expect(res.status).toBe(404);
+    expect(await basePrisma.user.count({ where: { email: "x@test.local" } })).toBe(0);
   });
 
-  it("password disimpan sebagai hash argon2id, bukan teks asli", async () => {
-    const user = await basePrisma.user.findUniqueOrThrow({ where: { email: EMAIL } });
-    const acc = await basePrisma.account.findFirstOrThrow({ where: { userId: user.id, providerId: "credential" } });
+  it("endpoint email (login, lupa password, ubah profil) ditutup", async () => {
+    for (const p of ["/sign-in/email", "/request-password-reset", "/update-user", "/delete-user"]) {
+      expect((await call(p, {})).status, p).toBe(404);
+    }
+  });
+
+  it("akun baru: password tersimpan sebagai hash argon2id, kategori default ter-provision", async () => {
+    const acc = await basePrisma.account.findFirstOrThrow({ where: { userId: user.userId, providerId: "credential" } });
     expect(acc.password).toMatch(/^\$argon2id\$/);
-    expect(acc.password).not.toContain(PASSWORD);
+    expect(await basePrisma.category.count({ where: { userId: user.userId } })).toBeGreaterThan(30);
   });
 
-  it("login ditolak sebelum email diverifikasi", async () => {
-    const res = await signIn(EMAIL, PASSWORD);
-    expect(res.status).toBe(403);
+  it("login dengan username (tidak peka huruf besar) berhasil, password salah ditolak", async () => {
+    const ok = await call("/sign-in/username", { username: user.username.toUpperCase(), password: TEST_PASSWORD });
+    expect(ok.status).toBe(200);
+    expect(ok.headers.getSetCookie().join(";")).toContain("HttpOnly");
+    expect((await basePrisma.user.findUniqueOrThrow({ where: { id: user.userId } })).lastLoginAt).not.toBeNull();
+    const bad = await call("/sign-in/username", { username: user.username, password: "salah-salah-123" });
+    expect(bad.status).toBe(401);
+    const none = await call("/sign-in/username", { username: "tidakada", password: TEST_PASSWORD });
+    expect(none.status).toBe(401);
   });
 
-  it("setelah verifikasi, login berhasil dan cookie sesi httpOnly", async () => {
-    const link = new URL(lastLink(EMAIL));
-    const token = link.searchParams.get("token")!;
-    await auth.api.verifyEmail({ query: { token } });
-    const user = await basePrisma.user.findUniqueOrThrow({ where: { email: EMAIL } });
-    expect(user.emailVerified).toBe(true);
-
-    const res = await signIn(EMAIL, PASSWORD);
-    expect(res.status).toBe(200);
-    const cookie = res.headers.get("set-cookie") ?? "";
-    expect(cookie).toContain("HttpOnly");
-    expect(await basePrisma.session.count({ where: { userId: user.id } })).toBeGreaterThan(0);
+  it("ganti password sendiri: perlu password lama, lalu password lama tidak berlaku", async () => {
+    const login = await call("/sign-in/username", { username: user.username, password: TEST_PASSWORD });
+    const cookie = cookieOf(login);
+    const wrong = await call("/change-password", { currentPassword: "bukan-ini-123", newPassword: "Baru-Sekali-456" }, cookie);
+    expect(wrong.status).toBe(400);
+    const ok = await call("/change-password", { currentPassword: TEST_PASSWORD, newPassword: "Baru-Sekali-456", revokeOtherSessions: true }, cookie);
+    expect(ok.status).toBe(200);
+    expect((await call("/sign-in/username", { username: user.username, password: TEST_PASSWORD })).status).toBe(401);
+    expect((await call("/sign-in/username", { username: user.username, password: "Baru-Sekali-456" })).status).toBe(200);
   });
 
-  it("password salah ditolak", async () => {
-    const res = await signIn(EMAIL, "salah-password-123");
-    expect(res.status).toBe(401);
-  });
-
-  it("email unik: registrasi ulang dengan email sama tidak membuat user kedua", async () => {
-    await auth.api
-      .signUpEmail({ body: { name: "Palsu", email: EMAIL, password: PASSWORD }, asResponse: true })
-      .catch(() => undefined);
-    expect(await basePrisma.user.count({ where: { email: EMAIL } })).toBe(1);
-  });
-
-  it("password < 8 karakter ditolak server", async () => {
-    const res = await auth.api.signUpEmail({
-      body: { name: "Pendek", email: "pendek@test.local", password: "1234567" },
-      asResponse: true,
-    });
-    expect(res.status).toBe(400);
-    expect(await basePrisma.user.count({ where: { email: "pendek@test.local" } })).toBe(0);
-  });
-
-  it("reset password: token dari email mengganti password & mencabut semua sesi", async () => {
-    await auth.api.requestPasswordReset({ body: { email: EMAIL, redirectTo: "/reset-password" } });
-    const link = lastLink(EMAIL);
-    const token = new URL(link).pathname.split("/").pop()!;
-    await auth.api.resetPassword({ body: { newPassword: "Password-Baru-456", token } });
-
-    const user = await basePrisma.user.findUniqueOrThrow({ where: { email: EMAIL } });
-    expect(await basePrisma.session.count({ where: { userId: user.id } })).toBe(0);
-    expect((await signIn(EMAIL, PASSWORD)).status).toBe(401);
-    expect((await signIn(EMAIL, "Password-Baru-456")).status).toBe(200);
+  it("role tidak bisa diubah lewat API auth", async () => {
+    const login = await call("/sign-in/username", { username: user.username, password: "Baru-Sekali-456" });
+    await call("/update-user", { role: "ADMIN" }, cookieOf(login));
+    expect((await basePrisma.user.findUniqueOrThrow({ where: { id: user.userId } })).role).toBe("USER");
   });
 });

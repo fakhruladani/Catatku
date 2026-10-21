@@ -3,8 +3,11 @@ export function authErrorMessage(err: { code?: string; status?: number; message?
   if (!err) return "Terjadi kesalahan. Coba lagi.";
   if (err.status === 429) return "Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.";
   switch (err.code) {
+    case "INVALID_USERNAME_OR_PASSWORD":
     case "INVALID_EMAIL_OR_PASSWORD":
-      return "Email atau password salah.";
+      return "Username atau password salah.";
+    case "INVALID_PASSWORD":
+      return "Password saat ini salah.";
     case "EMAIL_NOT_VERIFIED":
       return "Email belum diverifikasi. Cek kotak masuk kamu, atau kirim ulang tautan verifikasi.";
     case "USER_ALREADY_EXISTS":

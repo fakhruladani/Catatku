@@ -5,7 +5,7 @@ import { type NextRequest, NextResponse } from "next/server";
  * Pengecekan cepat (optimistic) berdasarkan keberadaan cookie sesi.
  * Validasi sesi yang sebenarnya dilakukan di server (requireUser / runAction).
  */
-const PUBLIC_PATHS = ["/masuk", "/daftar", "/verifikasi-email", "/lupa-password", "/reset-password"];
+const PUBLIC_PATHS = ["/masuk"];
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;

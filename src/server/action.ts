@@ -50,6 +50,8 @@ export async function runAction<S extends z.ZodType, O>(
 ): Promise<ActionResult<O>> {
   const user = await getSessionUser();
   if (!user) return { ok: false, error: "Sesi berakhir. Silakan masuk lagi." };
+  // Akun admin hanya mengelola akun; tidak punya buku kas.
+  if (user.role !== "USER") return { ok: false, error: "Akun admin tidak memiliki buku kas" };
   const parsed = schema.safeParse(rawInput);
   if (!parsed.success) {
     return { ok: false, error: "Periksa kembali isian kamu", fieldErrors: zodFieldErrors(parsed.error) };

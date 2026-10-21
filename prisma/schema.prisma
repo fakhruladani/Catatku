@@ -37,6 +37,11 @@ model User {
   emailVerified         Boolean   @default(false)
   image                 String?
   nickname              String?
+  /// Login memakai username (plugin username Better Auth). Disimpan lowercase.
+  username              String?   @unique
+  /// "USER" | "ADMIN" (CHECK di migrasi). Akun hanya dibuat oleh ADMIN.
+  role                  String    @default("USER")
+  lastLoginAt           DateTime?
   twoFactorEnabled      Boolean   @default(false)
   onboardingCompletedAt DateTime?
   createdAt             DateTime  @default(now())

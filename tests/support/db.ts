@@ -1,7 +1,7 @@
+import { createAccount } from "@/server/admin/accounts";
+import type { UserCtx } from "@/server/auth/session";
 import { basePrisma } from "@/server/db/base-client";
 import { forUser } from "@/server/db/scoped";
-import { provisionNewUser } from "@/server/provision";
-import type { UserCtx } from "@/server/auth/session";
 
 export async function resetDb() {
   const tables = await basePrisma.$queryRaw<{ tablename: string }[]>`
@@ -12,13 +12,14 @@ export async function resetDb() {
 }
 
 let counter = 0;
-export async function createTestUser(name: string): Promise<UserCtx & { email: string }> {
+export const TEST_PASSWORD = "Rahasia-Uji-123";
+
+/** User biasa (dibuat lewat jalur yang sama dengan admin: createAccount + provisioning kategori). */
+export async function createTestUser(name: string): Promise<UserCtx & { username: string }> {
   counter += 1;
-  const id = `test_${name.toLowerCase()}_${Date.now()}_${counter}`;
-  const email = `${name.toLowerCase()}_${counter}_${Date.now()}@test.local`;
-  await basePrisma.user.create({ data: { id, name, email, emailVerified: true } });
-  await provisionNewUser(id);
-  return { userId: id, db: forUser(id), email };
+  const username = `${name.toLowerCase().replace(/[^a-z0-9]/g, "")}${counter}`;
+  const { id } = await createAccount({ username, name, password: TEST_PASSWORD });
+  return { userId: id, db: forUser(id), username };
 }
 
 export { basePrisma };
