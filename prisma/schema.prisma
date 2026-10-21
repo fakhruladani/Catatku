@@ -1,0 +1,205 @@
+// Catatku — skema database (buku kas)
+// Aturan:
+// - Nominal uang: BigInt (rupiah utuh), selalu > 0. Arah uang ditentukan kolom `type`.
+// - Semua model milik user punya userId (FK ke User, onDelete: Cascade) dan @@unique([id, userId]).
+// - Relasi antar-data user memakai composite FK (xId, userId) -> (id, userId) agar DB menolak
+//   referensi lintas-user. Transaksi -> kategori juga menyertakan `type`, sehingga DB menolak
+//   transaksi pemasukan yang diberi kategori pengeluaran (dan sebaliknya).
+// - Kolom tanggal memakai @db.Date = tanggal lokal Asia/Jakarta.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Jenis arus kas: pemasukan atau pengeluaran
+enum EntryType {
+  INCOME
+  EXPENSE
+}
+
+enum ThemePref {
+  LIGHT
+  DARK
+  SYSTEM
+}
+
+// ───────────────────────── Auth (format Better Auth) ─────────────────────────
+
+model User {
+  id                    String    @id @default(cuid())
+  name                  String
+  email                 String    @unique
+  emailVerified         Boolean   @default(false)
+  image                 String?
+  nickname              String?
+  twoFactorEnabled      Boolean   @default(false)
+  onboardingCompletedAt DateTime?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  sessions     Session[]
+  accounts     Account[]
+  twoFactors   TwoFactor[]
+  preference   UserPreference?
+  categories   Category[]
+  transactions Transaction[]
+  budgets      Budget[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+/// Menyimpan hash password (providerId = "credential").
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+/// Token verifikasi email, reset password, dan ganti email.
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+model TwoFactor {
+  id                      String    @id @default(cuid())
+  secret                  String
+  backupCodes             String
+  verified                Boolean   @default(true)
+  failedVerificationCount Int       @default(0)
+  lockedUntil             DateTime?
+  userId                  String
+  user                    User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([secret])
+}
+
+/// Storage rate limit (login, register, reset password). Tidak terkait user.
+model RateLimit {
+  id          String @id @default(cuid())
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+}
+
+// ───────────────────────── Preferensi ─────────────────────────
+
+model UserPreference {
+  id                     String    @id @default(cuid())
+  userId                 String    @unique
+  user                   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  theme                  ThemePref @default(SYSTEM)
+  /// 1..28 (CHECK di migrasi). Periode/tab bulan mengikuti tanggal ini.
+  financialMonthStartDay Int       @default(1)
+  /// Saldo kas sebelum transaksi pertama dicatat (boleh negatif).
+  openingBalance         BigInt    @default(0)
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  @@unique([id, userId])
+}
+
+// ───────────────────────── Kategori ─────────────────────────
+
+model Category {
+  id         String     @id @default(cuid())
+  userId     String
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  type       EntryType
+  /// Maksimal 1 level (divalidasi di aplikasi). Induk harus bertipe sama (dipaksa composite FK).
+  parentId   String?
+  parent     Category?  @relation("Sub", fields: [parentId, userId, type], references: [id, userId, type], onDelete: NoAction)
+  children   Category[] @relation("Sub")
+  icon       String
+  color      String
+  sortOrder  Int        @default(0)
+  archivedAt DateTime?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  transactions Transaction[]
+  budgets      Budget[]
+
+  @@unique([id, userId])
+  @@unique([id, userId, type])
+  @@index([userId, type])
+}
+
+// ───────────────────────── Transaksi (baris buku kas) ─────────────────────────
+
+model Transaction {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        DateTime  @db.Date
+  type        EntryType
+  amount      BigInt
+  description String    @default("")
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId, userId, type], references: [id, userId, type], onDelete: NoAction, onUpdate: NoAction)
+  /// Urutan input (stabil) untuk baris bertanggal sama
+  seq         Int       @default(autoincrement())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([id, userId])
+  @@index([userId, date, seq])
+  @@index([userId, categoryId])
+}
+
+// ───────────────────────── Anggaran ─────────────────────────
+
+/// Nominal anggaran kategori pengeluaran yang berlaku MULAI periode effectiveFrom ("YYYY-MM").
+/// Nominal periode P = baris dengan effectiveFrom terbesar <= P. amount = 0 berarti "tanpa anggaran".
+model Budget {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId    String
+  category      Category @relation(fields: [categoryId, userId], references: [id, userId], onDelete: Cascade)
+  amount        BigInt
+  effectiveFrom String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([id, userId])
+  @@unique([userId, categoryId, effectiveFrom])
+}
