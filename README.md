@@ -202,3 +202,7 @@ Detail desain: [docs/DESAIN.md](docs/DESAIN.md).
 | "Terlalu banyak percobaan" saat login | Tunggu 1 menit (rate limit 5 percobaan/menit) |
 | Port 3000 dipakai | `npm run dev -- -p 3001` (ubah juga `BETTER_AUTH_URL`/`APP_URL`) |
 | Login di production gagal di `http://` | Mode produksi memakai cookie `Secure`: wajib HTTPS (atau `localhost`) |
+
+## Lisensi
+
+Dirilis di bawah [Lisensi MIT](LICENSE). Kode boleh dipakai, diubah, dan dibagikan ulang, asalkan pemberitahuan hak cipta tetap dicantumkan.
