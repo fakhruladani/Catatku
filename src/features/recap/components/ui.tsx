@@ -24,7 +24,7 @@ export function KpiCard({
 
 /** Perubahan % vs periode lalu. `goodWhenUp` menentukan warna (pengeluaran naik = buruk). */
 export function Change({ pct, goodWhenUp = true }: { pct: number | null; goodWhenUp?: boolean }) {
-  if (pct === null) return <span>— vs bulan lalu</span>;
+  if (pct === null) return <span>Bulan lalu belum ada data</span>;
   const up = pct > 0;
   const good = pct === 0 ? null : up === goodWhenUp;
   const Icon = pct === 0 ? Minus : up ? ArrowUpRight : ArrowDownRight;

@@ -42,7 +42,7 @@ sudo -u postgres psql -c "CREATE DATABASE catatku OWNER catatku;"
 ## 3. Kode & konfigurasi
 
 ```bash
-cd ~ && git clone https://github.com/fakhruladani/catatku.git && cd catatku
+cd ~ && git clone https://github.com/fakhruladani/Catatku.git catatku && cd catatku
 cp .env.example .env && chmod 600 .env
 nano .env
 ```
@@ -65,7 +65,7 @@ ADMIN_PASSWORD='ganti-dengan-password-kuat' npm run admin:create
 npm run build
 ```
 
-> Tanpa `ADMIN_PASSWORD`, admin dibuat dengan password `password` — **wajib** diganti segera setelah login (menu *Akun saya*), karena server sudah bisa diakses dari internet.
+> Tanpa `ADMIN_PASSWORD`, admin dibuat dengan password `password`. Password ini **wajib** diganti segera setelah login (menu *Akun saya*) karena server sudah bisa diakses dari internet.
 
 ## 4. Service systemd
 

@@ -9,7 +9,7 @@ import { createAccount, setAccountPassword } from "./accounts";
 
 /**
  * Manajemen akun oleh ADMIN. Satu-satunya modul lintas-user.
- * Admin TIDAK bisa membaca isi catatan keuangan user — hanya metadata (username, nama, tanggal, jumlah baris).
+ * Admin TIDAK bisa membaca isi catatan keuangan user, hanya metadata (username, nama, tanggal, jumlah baris).
  */
 export interface AdminCtx {
   adminId: string;

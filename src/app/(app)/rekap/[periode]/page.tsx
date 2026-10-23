@@ -89,7 +89,7 @@ async function Recap({ periodKey }: { periodKey: string }) {
               <CardTitle className="text-base">Top 5 pengeluaran</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-3">
-              {r.top5Expense.length === 0 && <p className="text-sm text-muted-foreground">—</p>}
+              {r.top5Expense.length === 0 && <p className="text-sm text-muted-foreground">Belum ada pengeluaran.</p>}
               {r.top5Expense.map((l, i) => (
                 <div key={l.id} className="grid gap-1">
                   <div className="flex justify-between gap-2 text-sm">

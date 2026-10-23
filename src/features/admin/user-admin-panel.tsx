@@ -90,7 +90,7 @@ export function UserAdminPanel({ users }: { users: UserRow[] }) {
         </CardContent>
       </Card>
       <p className="text-xs text-muted-foreground">
-        {users.length} user. Admin hanya melihat data akun — isi catatan keuangan user tidak bisa dibuka dari sini.
+        {users.length} user. Admin hanya melihat data akun. Isi catatan keuangan user tidak bisa dibuka dari sini.
       </p>
 
       {dialog?.kind === "create" && <CreateDialog onClose={() => setDialog(null)} />}

@@ -135,7 +135,7 @@ export function SheetGrid({
     [order, activeState],
   );
 
-  // Kembalikan fokus ke grid — kecuali editor baru sudah dibuka (jangan curi fokus editor)
+  // Kembalikan fokus ke grid, kecuali editor baru sudah dibuka (jangan curi fokus editor)
   const focusGrid = () =>
     requestAnimationFrame(() => {
       if (!editingRef.current) containerRef.current?.focus({ preventScroll: true });
@@ -581,7 +581,7 @@ export function SheetGrid({
           onKeyDown={onEditorKeyDown}
           onBlur={() => finishEdit(false)}
         >
-          <option value="">— Tanpa kategori —</option>
+          <option value="">(Tanpa kategori)</option>
           {cats
             .filter((c) => c.type === type && (!c.archived || c.id === current))
             .map((c) => (

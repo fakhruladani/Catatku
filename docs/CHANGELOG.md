@@ -1,17 +1,19 @@
-# Catatan per fase
+# Riwayat perubahan
 
-## 21 Okt 2026 — Akun hanya dibuat admin
+Catatan terbaru di atas. Bagian "Versi 1" di bawah mendokumentasikan versi awal (aplikasi dompet) yang sudah dirombak total dan tidak ada lagi di repositori ini.
+
+## 21 Okt 2026: Akun hanya dibuat admin
 - Login memakai **username** (plugin username Better Auth); username disimpan huruf kecil, 3–30 karakter `a-z 0-9 . _`.
 - **Pendaftaran mandiri ditutup**; halaman daftar, verifikasi email, lupa/reset password dihapus. Endpoint auth yang tidak dipakai dimatikan (`disabledPaths`).
 - Peran `USER` / `ADMIN` (kolom `role`, CHECK di DB). Admin tidak punya buku kas; user tidak bisa membuka `/admin`.
-- Halaman **Manajemen User** (`/admin`): daftar user (username, nama, dibuat, login terakhir, jumlah baris transaksi — tanpa isi), tambah user, atur ulang password (mencabut semua sesi user), hapus permanen (konfirmasi ketik username, cascade semua data).
+- Halaman **Manajemen User** (`/admin`): daftar user (username, nama, dibuat, login terakhir, jumlah baris transaksi, tanpa isi catatan), tambah user, atur ulang password (mencabut semua sesi user), hapus permanen (konfirmasi ketik username, cascade semua data).
 - **Ganti password sendiri** untuk user (`/pengaturan/akun`) dan admin (`/admin/akun`).
-- `npm run admin:create` membuat admin `admin` / `password` (sesuai permintaan) — idempoten, bisa set ulang password.
+- `npm run admin:create` membuat admin `admin` / `password` (sesuai permintaan). Perintah ini idempoten dan bisa dipakai untuk mengatur ulang password.
 - Migrasi `admin_username`. Test: 126 (termasuk login username, pendaftaran tertutup, ganti password, fitur admin, penolakan non-admin).
 
 **Catatan keamanan**: password admin bawaan `password` sangat lemah dan aplikasi publik; rate limit 5 percobaan/menit hanya memperlambat. Ganti password admin segera setelah login pertama.
 
-## 21 Okt 2026 — Versi 2: buku kas ala spreadsheet (perombakan total)
+## 21 Okt 2026: Versi 2, buku kas ala spreadsheet (perombakan total)
 Permintaan: fokus ke kas masuk/keluar berbentuk spreadsheet, bukan aplikasi dompet.
 
 **Dihapus**: dompet, transfer, investasi, target tabungan, utang-piutang, net worth, transaksi berulang, dashboard widget (skema & kode). Database VPS di-reset (isinya hanya data demo).
@@ -22,8 +24,8 @@ Permintaan: fokus ke kas masuk/keluar berbentuk spreadsheet, bukan aplikasi domp
 - Tab Rekap Bulanan, Rekap Tahunan (grafik + pivot kategori × bulan), Anggaran (editable, berlaku ke depan), Kategori.
 - Ekspor Excel per tahun: 12 sheet bulan dengan rumus saldo berjalan & SUMIF + sheet Rekap Tahunan.
 - Onboarding diganti: profil → saldo awal → kategori → tanggal awal bulan.
-- Seed demo baru (budi@ / sari@demo.catatku) dengan anggaran.
-- Test: 120 (unit: uang, periode, saldo berjalan, rekap/pivot/anggaran, parser paste & nominal; integration: isolasi lintas-user untuk semua service, buku kas end-to-end, ekspor, auth) + uji browser (Playwright) untuk alur ketik, edit, paste, hapus, semua tab, ekspor, registrasi.
+- Seed demo baru (dua akun, budi dan sari) lengkap dengan anggaran. Sejak perubahan akun admin, keduanya login memakai username.
+- Test: 120 (unit: uang, periode, saldo berjalan, rekap/pivot/anggaran, parser paste & nominal; integration: isolasi lintas-user untuk semua service, buku kas end-to-end, ekspor, auth) + uji browser (Playwright) untuk alur ketik, edit, paste, hapus, semua tab, ekspor, dan registrasi (registrasi kemudian dihapus pada perubahan akun admin).
 
 **Asumsi**
 - Satu kolom Nominal (selalu positif) + kolom Jenis; ketik angka minus = otomatis Keluar.
@@ -31,11 +33,11 @@ Permintaan: fokus ke kas masuk/keluar berbentuk spreadsheet, bukan aplikasi domp
 - Anggaran hanya untuk kategori pengeluaran; nominal berlaku untuk bulan itu dan seterusnya sampai diubah.
 - Paste yang dimulai di baris yang sudah ada akan **menimpa** baris-baris di bawahnya (seperti Excel), sisanya jadi baris baru.
 
-## 21 Okt 2026 — Dibuka untuk publik (uji coba)
+## 21 Okt 2026: Dibuka untuk publik (uji coba)
 - Deploy uji coba di VPS: Caddy + HTTPS Let's Encrypt, firewall 22/80/443, aplikasi hanya mendengar di localhost.
 - Diverifikasi dari internet: redirect HTTP→HTTPS, sertifikat valid, login, cookie `__Secure-`, Origin asing ditolak (403), registrasi baru + onboarding.
 
-## Fase 1 — selesai 21 Okt 2026
+## Versi 1, Fase 1: selesai 21 Okt 2026 (sudah tidak berlaku)
 
 **Dibuat**
 - Proyek Next.js 16 + TypeScript + Tailwind v4 + shadcn/ui; Prisma 7 + PostgreSQL 16.

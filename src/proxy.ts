@@ -18,7 +18,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
   // Catatan: user yang sudah login di /masuk diarahkan oleh halaman itu sendiri setelah sesi
-  // divalidasi di server — bukan di sini, agar cookie kedaluwarsa tidak menyebabkan redirect loop.
+  // divalidasi di server, bukan di sini, agar cookie kedaluwarsa tidak menyebabkan redirect loop.
   return NextResponse.next();
 }
 

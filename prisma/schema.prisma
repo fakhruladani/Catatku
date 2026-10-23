@@ -1,4 +1,4 @@
-// Catatku — skema database (buku kas)
+// Catatku: skema database (buku kas)
 // Aturan:
 // - Nominal uang: BigInt (rupiah utuh), selalu > 0. Arah uang ditentukan kolom `type`.
 // - Semua model milik user punya userId (FK ke User, onDelete: Cascade) dan @@unique([id, userId]).

@@ -28,7 +28,7 @@ let bIncomeCatId: string;
 let aExpenseCatId: string;
 const PERIOD = "2026-10";
 
-/** Seluruh baris milik B — dibandingkan sebelum & sesudah serangan. */
+/** Seluruh baris milik B, dibandingkan sebelum & sesudah serangan. */
 async function snapshotUser(userId: string) {
   const [user, pref, categories, txs, budgets] = await Promise.all([
     basePrisma.user.findUnique({ where: { id: userId } }),

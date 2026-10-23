@@ -7,7 +7,7 @@ import { getPreferences } from "@/features/preferences/service";
 import { requireCtx } from "@/server/auth/session";
 import { getOwnProfile } from "@/server/db/self";
 
-/** Bagian header yang butuh sesi — di-stream di balik Suspense (Cache Components). */
+/** Bagian header yang butuh sesi, di-stream di balik Suspense (Cache Components). */
 async function SessionChrome() {
   const ctx = await requireCtx();
   const [profile, pref] = await Promise.all([getOwnProfile(ctx), getPreferences(ctx)]);

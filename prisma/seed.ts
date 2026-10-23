@@ -3,8 +3,8 @@
  * Dipakai untuk mencoba aplikasi dan menguji isolasi data secara manual.
  *
  * Jalankan: npm run db:seed   (idempoten: user demo lama dihapus dulu, beserta seluruh datanya)
- * Login   : username budi / sari — password: Demo12345!
- * Akun admin TIDAK dibuat di sini — pakai `npm run admin:create`.
+ * Login   : username budi / sari, password: Demo12345!
+ * Akun admin TIDAK dibuat di sini. Pakai `npm run admin:create`.
  */
 import type { Prisma } from "../src/generated/prisma/client";
 import { createAccount } from "../src/server/admin/accounts";
@@ -31,7 +31,7 @@ function addDays(d: string, n: number): string {
   return x.toISOString().slice(0, 10);
 }
 const dayOf = (d: string) => Number(d.slice(8, 10));
-/** Dibulatkan ke ribuan — nominal realistis */
+/** Dibulatkan ke ribuan agar nominal realistis */
 const rb = (n: number) => BigInt(Math.round(n / 1000) * 1000);
 
 type Cat = Map<string, string>; // "EXPENSE:Makan di luar" -> id
@@ -143,7 +143,7 @@ async function seedSari() {
     if (rnd() < 0.03) E(d, rb(100_000 + rnd() * 300_000), "Kesehatan", "Obat & dokter");
     if (rnd() < 0.05) I(d, rb(300_000 + rnd() * 1_200_000), "Usaha / Freelance", "Les privat");
   }
-  // beberapa baris tanpa kategori — seperti catatan cepat di spreadsheet
+  // beberapa baris tanpa kategori, seperti catatan cepat di spreadsheet
   rows.push({ date: addDays(today, -3), type: "EXPENSE", amount: 75_000n, categoryId: null, description: "Patungan kado" });
   const n = await insert(db, userId, rows);
   await budgets(db, userId, c, 1, [

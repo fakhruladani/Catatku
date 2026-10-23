@@ -2,7 +2,7 @@ import { z } from "zod";
 import { MAX_AMOUNT, parseRupiahInput } from "./money";
 import { isPlainDate } from "./period";
 
-/** ID entitas (cuid). Hanya format — kepemilikan dicek di server lewat client ter-scope. */
+/** ID entitas (cuid). Hanya format; kepemilikan dicek di server lewat client ter-scope. */
 export const zId = z.string().trim().min(1, "ID wajib").max(64);
 
 /** Nominal uang dari input form: string ("1.250.000") / number / bigint -> bigint */

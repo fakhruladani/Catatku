@@ -1,6 +1,6 @@
 # Catatku
 
-**Buku kas masuk & keluar berbentuk spreadsheet** — catat pemasukan dan pengeluaran langsung di tabel seperti Excel, kelompokkan per kategori, lalu lihat rekap bulanan dan tahunan. Multi-user: **akun hanya dibuat oleh admin**, dan setiap akun hanya bisa melihat datanya sendiri.
+**Catatku adalah buku kas masuk dan keluar berbentuk spreadsheet.** Pemasukan dan pengeluaran dicatat langsung di tabel seperti Excel, dikelompokkan per kategori, lalu dirangkum dalam rekap bulanan dan tahunan. Aplikasi ini mendukung banyak pengguna. Akun hanya dibuat oleh admin, dan setiap akun hanya bisa melihat datanya sendiri.
 
 Mata uang Rupiah (`Rp1.250.000`), bahasa Indonesia, zona waktu Asia/Jakarta.
 
@@ -12,14 +12,14 @@ Mata uang Rupiah (`Rp1.250.000`), bahasa Indonesia, zona waktu Asia/Jakarta.
 |---|---|
 | **Sheet per bulan** | Tab bawah Jan–Des ala workbook Excel. Kolom: Tanggal · Keterangan · Jenis (Masuk/Keluar) · Kategori · Nominal · Saldo berjalan. |
 | **Isi seperti Excel** | Ketik langsung di sel, Enter/Tab/panah untuk pindah, `M`/`K` untuk jenis, nominal bisa `35000`, `35.000`, `35rb`, `1,5jt` (angka minus = Keluar). Tersimpan otomatis. |
-| **Copy–paste** | Tempel banyak baris dari Excel/Google Sheets (tanggal format Indonesia, `Rp1.250.000`, nama kategori dikenali). Ctrl+C untuk menyalin sel/baris. |
+| **Salin & tempel** | Tempel banyak baris dari Excel/Google Sheets (tanggal format Indonesia, `Rp1.250.000`, nama kategori dikenali). Ctrl+C untuk menyalin sel/baris. |
 | **Kategori** | Kategori pemasukan & pengeluaran dengan subkategori (1 level), bisa diarsipkan. |
 | **Rekap Bulanan** | Total masuk/keluar/selisih, saving rate, perbandingan dengan bulan lalu, rincian per kategori, top 5 pengeluaran, status anggaran. |
 | **Rekap Tahunan** | Grafik masuk vs keluar per bulan, ringkasan 12 bulan, tabel kategori × bulan, rata-rata bulanan, bulan paling boros. |
 | **Anggaran** | Batas pengeluaran per kategori, berlaku ke bulan-bulan berikutnya sampai diubah; peringatan di 80% dan 100%. |
 | **Ekspor Excel** | Workbook satu tahun: 12 sheet bulan (dengan rumus saldo & total) + sheet Rekap Tahunan. |
 | **Tanggal awal bulan** | Bulan keuangan bisa dimulai tanggal 1–28 (mis. tanggal gajian 25 → "Oktober" = 25 Sep–24 Okt). |
-| **Akun & admin** | Login dengan username. Tidak ada pendaftaran mandiri — admin menambah, mengatur ulang password, dan menghapus user dari halaman Manajemen User. Setiap pengguna bisa mengganti passwordnya sendiri. |
+| **Akun & admin** | Login dengan username. Tidak ada pendaftaran mandiri. Admin yang menambah, mengatur ulang password, dan menghapus user dari halaman Manajemen User. Setiap pengguna bisa mengganti passwordnya sendiri. |
 
 | Rekap bulanan | Rekap tahunan |
 |---|---|
@@ -64,7 +64,7 @@ Next.js 16 (App Router) · TypeScript · PostgreSQL 16 · Prisma 7 · Better Aut
 ### 2. Ambil kode & pasang dependensi
 
 ```bash
-git clone https://github.com/fakhruladani/catatku.git
+git clone https://github.com/fakhruladani/Catatku.git catatku
 cd catatku
 npm install          # otomatis menjalankan `prisma generate`
 ```
@@ -122,7 +122,7 @@ Buka **http://localhost:3000** lalu masuk:
 | `budi` | `Demo12345!` | Akun demo (setelah seed), tanggal awal bulan 25 |
 | `sari` | `Demo12345!` | Akun demo (setelah seed), tanggal awal bulan 1 |
 
-Admin tidak punya buku kas dan tidak bisa melihat isi catatan keuangan user — hanya username, nama, tanggal dibuat, login terakhir, dan jumlah baris transaksi.
+Admin tidak punya buku kas dan tidak bisa melihat isi catatan keuangan user. Yang terlihat oleh admin hanya username, nama, tanggal dibuat, login terakhir, dan jumlah baris transaksi.
 
 > Seed bersifat idempoten: akun demo lama dihapus beserta datanya lalu dibuat ulang. **Jangan** jalankan seed di server produksi, atau hapus akun demo setelahnya.
 
@@ -133,7 +133,7 @@ Admin tidak punya buku kas dan tidak bisa melihat isi catatan keuangan user — 
 | Variabel | Wajib | Keterangan |
 |---|---|---|
 | `DATABASE_URL` | ✔ | Koneksi PostgreSQL |
-| `BETTER_AUTH_SECRET` | ✔ | String acak ≥ 32 karakter. Rahasia — jangan di-commit |
+| `BETTER_AUTH_SECRET` | ✔ | String acak minimal 32 karakter. Bersifat rahasia, jangan di-commit |
 | `BETTER_AUTH_URL`, `APP_URL` | ✔ | URL aplikasi, mis. `https://catatku.domainmu.com` |
 | `RATE_LIMIT` | | `true` untuk mengaktifkan rate limit di development (selalu aktif di production: 5 percobaan login/menit) |
 | `UPLOAD_DIR` | | Folder foto profil. Default `./.uploads` |

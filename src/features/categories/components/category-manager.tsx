@@ -187,7 +187,7 @@ function CategoryFormDialog({
                 value={v.parentId ?? ""}
                 onChange={(e) => setV({ ...v, parentId: e.target.value || null })}
               >
-                <option value="">— Tanpa induk —</option>
+                <option value="">(Tanpa induk)</option>
                 {parents.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}

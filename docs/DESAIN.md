@@ -1,6 +1,6 @@
-# Catatku — Dokumen Desain Teknis
+# Catatku: Dokumen Desain Teknis
 
-Terakhir diperbarui: 21 Okt 2026 (versi 2 — buku kas ala spreadsheet)
+Terakhir diperbarui: 21 Okt 2026 (versi 2, buku kas ala spreadsheet)
 Sumber kebenaran skema: `prisma/schema.prisma` + `prisma/sql/checks.sql`.
 
 ## 0. Arah produk (berubah dari versi 1)
@@ -51,7 +51,7 @@ Perlindungan di level database:
 |---|---|---|
 | Saldo awal periode | `openingBalance` + Σ(masuk − keluar) semua transaksi sebelum tanggal mulai periode | `transactions/service.balanceBefore` |
 | Saldo berjalan | saldo awal periode + kumulatif per baris (urut tanggal, lalu urutan input) | `lib/finance/cashbook.runningBalances` |
-| Saving rate | (masuk − keluar) / masuk; "—" bila masuk = 0 | `cashbook.savingRate` |
+| Saving rate | (masuk − keluar) / masuk; tanda strip bila masuk = 0 | `cashbook.savingRate` |
 | Rekap per kategori | subkategori dijumlah ke induk; transaksi tanpa kategori = "Tanpa kategori" | `lib/finance/recap.byCategory` |
 | Pivot tahunan | kategori induk × 12 periode; rata-rata = total / jumlah periode yang sudah berjalan | `recap.pivot` |
 | Anggaran | realisasi induk = induk + subkategori; peringatan ≥80%, lewat ≥100% | `recap.budgetStatus`, `budgets/service` |
@@ -63,7 +63,7 @@ Periode: `periodKey` "YYYY-MM" = bulan tempat periode berakhir (awal bulan 25 �
 1. `userId` hanya dari sesi (`runAction`/`requireCtx`); skema Zod tidak punya `userId`.
 2. `forUser(userId)` (Prisma extension) hanya mengekspos `UserPreference`, `Category`, `Transaction`, `Budget`; menyuntikkan `userId` ke setiap query, menolak filter `userId` asing, menolak operasi tak dikenal.
 3. Composite FK (di atas).
-4. ESLint melarang impor Prisma mentah di luar `src/server/db` & `src/server/auth`.
+4. ESLint melarang impor Prisma mentah di luar `src/server/db`, `src/server/auth`, dan `src/server/admin`.
 5. Test: matriks serangan untuk setiap fungsi `features/*/service.ts` (gagal jika ada service baru tanpa kasus), snapshot data korban sebelum/sesudah, cek ekspor Excel tidak memuat data user lain.
 
 ## 5. Halaman & tab
@@ -92,5 +92,5 @@ Periode: `periodKey` "YYYY-MM" = bulan tempat periode berakhir (awal bulan 25 �
 
 - Belum ada pencarian/filter di dalam sheet (tidak diminta).
 - Tidak ada undo (Ctrl+Z); penghapusan memakai konfirmasi.
-- Di layar ponsel, grid digeser horizontal (lebar minimum 920 px) — perilaku wajar untuk spreadsheet.
+- Di layar ponsel, grid digeser horizontal (lebar minimum 920 px). Ini perilaku yang wajar untuk spreadsheet.
 - Paste maksimal 1000 baris per sekali tempel.

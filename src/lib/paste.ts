@@ -121,7 +121,7 @@ export function parseAmountLoose(raw: string): bigint | null {
     s = s.slice(1);
   } else if (s.startsWith("+")) s = s.slice(1);
   s = s.replace(/^rp\.?/i, "");
-  // desimal ,00 atau .00 di akhir (2 digit) — hanya boleh nol
+  // desimal ,00 atau .00 di akhir (2 digit), hanya boleh nol
   const dec = /^(.*?)[.,](\d{1,2})$/.exec(s);
   if (dec && !/^\d{1,3}([.,]\d{3})+$/.test(s)) {
     if (Number(dec[2]) !== 0) return null;

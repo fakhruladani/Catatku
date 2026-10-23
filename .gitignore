@@ -46,5 +46,5 @@ next-env.d.ts
 /.uploads-test/
 !.env.example
 
-# Catatan server privat (berisi IP & detail VPS) — tidak ikut repo
+# Catatan server privat (berisi IP & detail VPS), tidak ikut repo
 /docs/VPS.md

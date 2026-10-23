@@ -72,7 +72,7 @@ function scopeWhere(where: unknown, userId: string): AnyRecord {
   return w;
 }
 
-/** Transformasi argumen — diekspor untuk unit test. */
+/** Transformasi argumen (diekspor untuk unit test). */
 export function scopeArgs(model: string, operation: string, rawArgs: unknown, userId: string): AnyRecord {
   if (!userId) throw new IsolationError("userId kosong");
   if (!OWNED.has(model)) throw new IsolationError(`Model ${model} tidak boleh diakses lewat client user`);

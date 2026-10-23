@@ -1,4 +1,4 @@
-/** Login username, pendaftaran mandiri ditutup, ganti password — diuji lewat handler HTTP Better Auth. */
+/** Login username, pendaftaran mandiri ditutup, ganti password, diuji lewat handler HTTP Better Auth. */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { auth } from "@/server/auth/auth";
 import { basePrisma, createTestUser, resetDb, TEST_PASSWORD } from "../support/db";
